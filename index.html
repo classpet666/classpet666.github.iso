@@ -1,0 +1,2396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班宠乐园 - 班级积分与互动管理系统</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF6B6B',
+                        secondary: '#4ECDC4',
+                        accent: '#FFD166',
+                        danger: '#EF476F',
+                        light: '#F7FFF7',
+                        dark: '#2B2D42',
+                        success: '#06D6A0',
+                        info: '#118AB2',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .btn-primary {
+                @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-all duration-300;
+            }
+            .btn-secondary {
+                @apply bg-secondary text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-all duration-300;
+            }
+            .btn-accent {
+                @apply bg-accent text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-all duration-300;
+            }
+            .btn-outline {
+                @apply border border-primary text-primary px-4 py-2 rounded-lg hover:bg-primary hover:text-white transition-all duration-300;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 登录/注册模态框 -->
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 w-full max-w-md shadow-2xl">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-primary">欢迎使用班宠乐园</h2>
+                <p class="text-gray-600">专为中小学/幼儿园打造的班级管理神器</p>
+            </div>
+            
+            <div class="flex mb-6">
+                <button id="loginTab" class="flex-1 py-2 text-center border-b-2 border-primary text-primary font-medium">登录</button>
+                <button id="registerTab" class="flex-1 py-2 text-center border-b-2 border-gray-200 text-gray-500 font-medium">注册</button>
+            </div>
+            
+            <div id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="email">
+                        邮箱/手机号
+                    </label>
+                    <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="email" type="text" placeholder="请输入邮箱或手机号">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="password">
+                        密码
+                    </label>
+                    <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="password" type="password" placeholder="请输入密码">
+                </div>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <input id="remember" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="remember" class="ml-2 block text-sm text-gray-700">记住我</label>
+                    </div>
+                    <a class="text-sm text-primary hover:underline" href="#">忘记密码?</a>
+                </div>
+                <button id="loginBtn" class="w-full btn-primary flex justify-center items-center">
+                    <span>登录</span>
+                </button>
+            </div>
+            
+            <div id="registerForm" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="registerName">
+                        姓名
+                    </label>
+                    <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="registerName" type="text" placeholder="请输入您的姓名">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="registerEmail">
+                        邮箱/手机号
+                    </label>
+                    <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="registerEmail" type="text" placeholder="请输入邮箱或手机号">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="registerPassword">
+                        密码
+                    </label>
+                    <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="registerPassword" type="password" placeholder="请设置密码">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="confirmPassword">
+                        确认密码
+                    </label>
+                    <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="confirmPassword" type="password" placeholder="请再次输入密码">
+                </div>
+                <button id="registerBtn" class="w-full btn-primary flex justify-center items-center">
+                    <span>注册</span>
+                </button>
+            </div>
+            
+            <div class="mt-6 text-center text-sm text-gray-600">
+                <p>登录即表示您同意我们的<a href="#" class="text-primary hover:underline">服务条款</a>和<a href="#" class="text-primary hover:underline">隐私政策</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="flex h-screen overflow-hidden">
+        <!-- 侧边导航栏 (桌面端) -->
+        <aside id="sidebar" class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 bg-white border-r border-gray-200">
+                <div class="flex items-center justify-center h-16 px-4 bg-primary">
+                    <h1 class="text-xl font-bold text-white">班宠乐园</h1>
+                </div>
+                
+                <div class="flex flex-col flex-grow px-4 py-4 overflow-y-auto">
+                    <div class="flex flex-col flex-grow space-y-1">
+                        <button class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 active" data-target="dashboard">
+                            <i class="fa fa-dashboard mr-3 text-primary"></i>
+                            <span>班级概览</span>
+                        </button>
+                        <button class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100" data-target="pets">
+                            <i class="fa fa-paw mr-3 text-primary"></i>
+                            <span>宠物管理</span>
+                        </button>
+                        <button class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100" data-target="points">
+                            <i class="fa fa-star mr-3 text-primary"></i>
+                            <span>积分管理</span>
+                        </button>
+                        <button class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100" data-target="shop">
+                            <i class="fa fa-shopping-cart mr-3 text-primary"></i>
+                            <span>班级商城</span>
+                        </button>
+                        <button class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100" data-target="parents">
+                            <i class="fa fa-users mr-3 text-primary"></i>
+                            <span>家长联动</span>
+                        </button>
+                        <button class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100" data-target="tools">
+                            <i class="fa fa-wrench mr-3 text-primary"></i>
+                            <span>互动工具</span>
+                        </button>
+                        <button class="nav-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100" data-target="settings">
+                            <i class="fa fa-cog mr-3 text-primary"></i>
+                            <span>班级设置</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-4 border-t border-gray-200">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <img class="h-8 w-8 rounded-full" src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/0779fcbfe0ff4a96a8445357f06bec09~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=4RVo5jBTt20wx7hIyhewOVE%2BK0s%3D" alt="用户头像">
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-700">张老师</p>
+                            <p class="text-xs font-medium text-gray-500">六年级1班</p>
+                        </div>
+                        <button class="ml-auto text-gray-400 hover:text-gray-500">
+                            <i class="fa fa-sign-out"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <div class="flex flex-col flex-1 overflow-hidden">
+            <!-- 顶部导航栏 -->
+            <header class="bg-white shadow-sm z-10">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between h-16">
+                        <!-- 移动端菜单按钮 -->
+                        <button id="mobileMenuBtn" class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none">
+                            <i class="fa fa-bars text-xl"></i>
+                        </button>
+                        
+                        <!-- 班级信息 -->
+                        <div class="flex items-center">
+                            <h2 class="text-lg font-medium text-gray-900">六年级1班</h2>
+                            <span class="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">在线</span>
+                        </div>
+                        
+                        <!-- 右侧工具栏 -->
+                        <div class="flex items-center space-x-4">
+                            <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                                <i class="fa fa-bell"></i>
+                                <span class="absolute top-3 right-3 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">2</span>
+                            </button>
+                            <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                                <i class="fa fa-envelope"></i>
+                            </button>
+                            <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                                <i class="fa fa-question-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+                <!-- 班级概览 -->
+                <div id="dashboard" class="content-section">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">班级概览</h2>
+                        <p class="text-gray-600">欢迎回来，张老师！以下是班级最新情况。</p>
+                    </div>
+                    
+                    <!-- 统计卡片 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow p-6 card-hover">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-primary bg-opacity-10 rounded-full p-3">
+                                    <i class="fa fa-users text-primary text-xl"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">学生总数</dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">42</div>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 card-hover">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-secondary bg-opacity-10 rounded-full p-3">
+                                    <i class="fa fa-star text-secondary text-xl"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">本周积分</dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">345</div>
+                                            <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                                <i class="fa fa-arrow-up"></i>
+                                                <span class="sr-only">增加</span>
+                                                12%
+                                            </div>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 card-hover">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-accent bg-opacity-10 rounded-full p-3">
+                                    <i class="fa fa-paw text-accent text-xl"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">宠物数量</dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">42</div>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 card-hover">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-danger bg-opacity-10 rounded-full p-3">
+                                    <i class="fa fa-exclamation-triangle text-danger text-xl"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">需要关注</dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">3</div>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 图表和活动 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- 积分趋势图 -->
+                        <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">积分趋势</h3>
+                            <div class="h-64">
+                                <canvas id="pointsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- 最近活动 -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">最近活动</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100 text-green-500">
+                                            <i class="fa fa-plus"></i>
+                                        </span>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">李明获得了5积分</p>
+                                        <p class="text-xs text-gray-500">2小时前</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 text-blue-500">
+                                            <i class="fa fa-paw"></i>
+                                        </span>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">王浩的宠物升级了</p>
+                                        <p class="text-xs text-gray-500">5小时前</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-purple-100 text-purple-500">
+                                            <i class="fa fa-gift"></i>
+                                        </span>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">张晓兑换了"免作业券"</p>
+                                        <p class="text-xs text-gray-500">昨天</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-yellow-100 text-yellow-500">
+                                            <i class="fa fa-bell"></i>
+                                        </span>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">3只宠物需要喂食</p>
+                                        <p class="text-xs text-gray-500">昨天</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="mt-4 w-full text-center text-primary hover:text-primary-dark text-sm font-medium">
+                                查看全部活动
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 快速操作 -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">快速操作</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                            <button class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <div class="h-10 w-10 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mb-2">
+                                    <i class="fa fa-plus text-primary"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">添加积分</span>
+                            </button>
+                            <button class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <div class="h-10 w-10 rounded-full bg-secondary bg-opacity-10 flex items-center justify-center mb-2">
+                                    <i class="fa fa-users text-secondary"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">分组管理</span>
+                            </button>
+                            <button class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <div class="h-10 w-10 rounded-full bg-accent bg-opacity-10 flex items-center justify-center mb-2">
+                                    <i class="fa fa-bullhorn text-accent"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">发布通知</span>
+                            </button>
+                            <button class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <div class="h-10 w-10 rounded-full bg-purple-500 bg-opacity-10 flex items-center justify-center mb-2">
+                                    <i class="fa fa-gift text-purple-500"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">发放奖励</span>
+                            </button>
+                            <button class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <div class="h-10 w-10 rounded-full bg-red-500 bg-opacity-10 flex items-center justify-center mb-2">
+                                    <i class="fa fa-random text-red-500"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">随机点名</span>
+                            </button>
+                            <button class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <div class="h-10 w-10 rounded-full bg-gray-500 bg-opacity-10 flex items-center justify-center mb-2">
+                                    <i class="fa fa-ellipsis-h text-gray-500"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">更多工具</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 宠物管理 -->
+                <div id="pets" class="content-section hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">宠物管理</h2>
+                        <p class="text-gray-600">管理班级宠物和学生宠物。</p>
+                    </div>
+                    
+                    <!-- 宠物分类标签 -->
+                    <div class="mb-6 flex flex-wrap gap-2">
+                        <button class="px-4 py-2 bg-primary text-white rounded-full text-sm font-medium">全部宠物</button>
+                        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100">个人宠物</button>
+                        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100">小组宠物</button>
+                        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100">需要喂食</button>
+                        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100">已升级</button>
+                    </div>
+                    
+                    <!-- 宠物图鉴 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">宠物图鉴</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                            <!-- 已解锁宠物 -->
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/0779fcbfe0ff4a96a8445357f06bec09~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=4RVo5jBTt20wx7hIyhewOVE%2BK0s%3D" alt="熊猫探险家" class="w-16 h-16 object-contain mb-2">
+                                <span class="text-xs font-medium text-gray-900">熊猫探险家</span>
+                                <div class="mt-1 flex items-center">
+                                    <span class="text-[10px] text-green-600 bg-green-100 px-2 py-0.5 rounded-full">已解锁</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <img src="https://p6-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/85be4c4babb648c48c41f4a2705d0798~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=%2FDyqpvkKgv2F6%2ByiO8fHz1oDZfM%3D" alt="老虎学生" class="w-16 h-16 object-contain mb-2">
+                                <span class="text-xs font-medium text-gray-900">老虎学生</span>
+                                <div class="mt-1 flex items-center">
+                                    <span class="text-[10px] text-green-600 bg-green-100 px-2 py-0.5 rounded-full">已解锁</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/6751955d051a474ea97a9c306eddaa1e~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607759&x-signature=MqIfYMFVlGZiY%2BSoKYszTU%2B78IM%3D" alt="侦探猫咪" class="w-16 h-16 object-contain mb-2">
+                                <span class="text-xs font-medium text-gray-900">侦探猫咪</span>
+                                <div class="mt-1 flex items-center">
+                                    <span class="text-[10px] text-green-600 bg-green-100 px-2 py-0.5 rounded-full">已解锁</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 宠物蛋 -->
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/5375f2f3a4f94f9face0415ac3223224~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607140&x-signature=MTs5dM5QOMuuARNj1CRKXs8aVZQ%3D" alt="宠物蛋" class="w-16 h-16 object-contain mb-2">
+                                <span class="text-xs font-medium text-gray-900">宠物蛋</span>
+                                <div class="mt-1 flex items-center">
+                                    <span class="text-[10px] text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">未孵化</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <img src="https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/b428d72ab92a4b21a64645141e07edcd~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607133&x-signature=wPdbr2Ir4HSOfcNcoyy%2Bhm2IvsY%3D" alt="宠物蛋" class="w-16 h-16 object-contain mb-2">
+                                <span class="text-xs font-medium text-gray-900">宠物蛋</span>
+                                <div class="mt-1 flex items-center">
+                                    <span class="text-[10px] text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">未孵化</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 未解锁宠物 -->
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover opacity-50">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+                                    <i class="fa fa-question text-gray-400 text-xl"></i>
+                                </div>
+                                <span class="text-xs font-medium text-gray-500">神秘宠物</span>
+                                <div class="mt-1 flex items-center">
+                                    <span class="text-[10px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">未解锁</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover opacity-50">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+                                    <i class="fa fa-question text-gray-400 text-xl"></i>
+                                </div>
+                                <span class="text-xs font-medium text-gray-500">神秘宠物</span>
+                                <div class="mt-1 flex items-center">
+                                    <span class="text-[10px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">未解锁</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 宠物蛋孵化区 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">宠物蛋孵化区</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/5375f2f3a4f94f9face0415ac3223224~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607140&x-signature=MTs5dM5QOMuuARNj1CRKXs8aVZQ%3D" alt="宠物蛋" class="w-32 h-32 object-contain mb-4 animate-pulse-slow">
+                                <h4 class="text-base font-medium text-gray-900 mb-2">神秘宠物蛋</h4>
+                                <p class="text-sm text-gray-500 mb-4 text-center">需要更多积分来孵化这只神秘宠物蛋</p>
+                                <div class="w-full mb-4">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                        <span>孵化进度</span>
+                                        <span>65/100</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 65%"></div>
+                                    </div>
+                                </div>
+                                <button class="btn-primary w-full">继续孵化</button>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                                <img src="https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/b428d72ab92a4b21a64645141e07edcd~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607133&x-signature=wPdbr2Ir4HSOfcNcoyy%2Bhm2IvsY%3D" alt="宠物蛋" class="w-32 h-32 object-contain mb-4">
+                                <h4 class="text-base font-medium text-gray-900 mb-2">神秘宠物蛋</h4>
+                                <p class="text-sm text-gray-500 mb-4 text-center">需要更多积分来孵化这只神秘宠物蛋</p>
+                                <div class="w-full mb-4">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                        <span>孵化进度</span>
+                                        <span>30/100</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 30%"></div>
+                                    </div>
+                                </div>
+                                <button class="btn-primary w-full">继续孵化</button>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center border-2 border-dashed border-gray-300">
+                                <div class="w-32 h-32 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                    <i class="fa fa-plus text-gray-400 text-3xl"></i>
+                                </div>
+                                <h4 class="text-base font-medium text-gray-900 mb-2">购买宠物蛋</h4>
+                                <p class="text-sm text-gray-500 mb-4 text-center">花费50积分购买一个新的宠物蛋</p>
+                                <button class="btn-outline w-full">购买宠物蛋</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 宠物列表 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <!-- 宠物卡片 1 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="relative">
+                                <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/0779fcbfe0ff4a96a8445357f06bec09~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=4RVo5jBTt20wx7hIyhewOVE%2BK0s%3D" alt="熊猫宠物" class="w-full h-48 object-contain bg-blue-50 p-4">
+                                <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                                    <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-green-100 text-green-800 text-xs font-medium">Lv.3</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="text-lg font-medium text-gray-900">小汪</h3>
+                                    <span class="text-sm text-gray-500">李明</span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                        <span>能量</span>
+                                        <span>85/100</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between">
+                                    <button class="btn-outline text-sm py-1">查看详情</button>
+                                    <button class="btn-primary text-sm py-1">喂食</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 宠物卡片 2 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="relative">
+                                <img src="https://p6-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/85be4c4babb648c48c41f4a2705d0798~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=%2FDyqpvkKgv2F6%2ByiO8fHz1oDZfM%3D" alt="老虎宠物" class="w-full h-48 object-contain bg-orange-50 p-4">
+                                <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                                    <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-green-100 text-green-800 text-xs font-medium">Lv.2</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="text-lg font-medium text-gray-900">咪咪</h3>
+                                    <span class="text-sm text-gray-500">张晓</span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                        <span>能量</span>
+                                        <span>45/100</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-yellow-500 h-2 rounded-full" style="width: 45%"></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between">
+                                    <button class="btn-outline text-sm py-1">查看详情</button>
+                                    <button class="btn-primary text-sm py-1">喂食</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 宠物卡片 3 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="relative">
+                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/6751955d051a474ea97a9c306eddaa1e~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607759&x-signature=MqIfYMFVlGZiY%2BSoKYszTU%2B78IM%3D" alt="猫咪宠物" class="w-full h-48 object-contain bg-amber-50 p-4">
+                                <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                                    <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-green-100 text-green-800 text-xs font-medium">Lv.4</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="text-lg font-medium text-gray-900">跳跳</h3>
+                                    <span class="text-sm text-gray-500">王浩</span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                        <span>能量</span>
+                                        <span>20/100</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-red-500 h-2 rounded-full" style="width: 20%"></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between">
+                                    <button class="btn-outline text-sm py-1">查看详情</button>
+                                    <button class="btn-primary text-sm py-1">喂食</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 宠物卡片 4 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="relative">
+                                <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/0779fcbfe0ff4a96a8445357f06bec09~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=4RVo5jBTt20wx7hIyhewOVE%2BK0s%3D" alt="熊猫宠物" class="w-full h-48 object-contain bg-green-50 p-4">
+                                <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                                    <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-green-100 text-green-800 text-xs font-medium">Lv.1</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="text-lg font-medium text-gray-900">喳喳</h3>
+                                    <span class="text-sm text-gray-500">刘佳</span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                        <span>能量</span>
+                                        <span>95/100</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 95%"></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between">
+                                    <button class="btn-outline text-sm py-1">查看详情</button>
+                                    <button class="btn-primary text-sm py-1">喂食</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 添加宠物卡片 -->
+                        <div class="bg-white rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center p-6 h-full min-h-[280px] cursor-pointer hover:border-primary transition-colors duration-300">
+                            <div class="h-16 w-16 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mb-4">
+                                <i class="fa fa-plus text-primary text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-1">添加新宠物</h3>
+                            <p class="text-sm text-gray-500 text-center">分配宠物蛋或创建小组宠物</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 宠物图鉴按钮 -->
+                    <div class="mt-8 text-center">
+                        <button class="btn-outline inline-flex items-center">
+                            <i class="fa fa-book mr-2"></i>
+                            <span>查看宠物图鉴</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 积分管理 -->
+                <div id="points" class="content-section hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">积分管理</h2>
+                        <p class="text-gray-600">管理学生积分和班币。</p>
+                    </div>
+                    
+                    <!-- 积分排行榜 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">积分排行榜</h3>
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">宠物</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">积分</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">班币</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr class="bg-yellow-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold">1</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                    <span class="text-gray-600 font-medium">李</span>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">李明</div>
+                                                    <div class="text-xs text-gray-500">六年级1班</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/0779fcbfe0ff4a96a8445357f06bec09~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=4RVo5jBTt20wx7hIyhewOVE%2BK0s%3D" alt="熊猫宠物" class="w-8 h-8 object-contain">
+                                                <span class="ml-2 text-sm font-medium text-gray-900">小汪</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">156</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">15</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">详情</button>
+                                            <button class="text-green-600 hover:text-green-800">奖励</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">2</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                    <span class="text-gray-600 font-medium">张</span>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">张晓</div>
+                                                    <div class="text-xs text-gray-500">六年级1班</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/6751955d051a474ea97a9c306eddaa1e~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607759&x-signature=MqIfYMFVlGZiY%2BSoKYszTU%2B78IM%3D" alt="猫咪宠物" class="w-8 h-8 object-contain">
+                                                <span class="ml-2 text-sm font-medium text-gray-900">咪咪</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">142</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">14</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">详情</button>
+                                            <button class="text-green-600 hover:text-green-800">奖励</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 rounded-full bg-amber-700 flex items-center justify-center text-white font-bold">3</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                    <span class="text-gray-600 font-medium">王</span>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">王浩</div>
+                                                    <div class="text-xs text-gray-500">六年级1班</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <img src="https://p6-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/85be4c4babb648c48c41f4a2705d0798~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=%2FDyqpvkKgv2F6%2ByiO8fHz1oDZfM%3D" alt="老虎宠物" class="w-8 h-8 object-contain">
+                                                <span class="ml-2 text-sm font-medium text-gray-900">小虎</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">135</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">13</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">详情</button>
+                                            <button class="text-green-600 hover:text-green-800">奖励</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">4</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                    <span class="text-gray-600 font-medium">陈</span>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">陈丽</div>
+                                                    <div class="text-xs text-gray-500">六年级1班</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/0779fcbfe0ff4a96a8445357f06bec09~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=4RVo5jBTt20wx7hIyhewOVE%2BK0s%3D" alt="熊猫宠物" class="w-8 h-8 object-contain">
+                                                <span class="ml-2 text-sm font-medium text-gray-900">球球</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">128</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">12</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">详情</button>
+                                            <button class="text-green-600 hover:text-green-800">奖励</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">5</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                    <span class="text-gray-600 font-medium">刘</span>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">刘强</div>
+                                                    <div class="text-xs text-gray-500">六年级1班</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <img src="https://p6-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/85be4c4babb648c48c41f4a2705d0798~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517190147992CE64F32435AA053E3&rrcfp=f06b921b&x-expires=1781607760&x-signature=%2FDyqpvkKgv2F6%2ByiO8fHz1oDZfM%3D" alt="老虎宠物" class="w-8 h-8 object-contain">
+                                                <span class="ml-2 text-sm font-medium text-gray-900">强强</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">112</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">11</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">详情</button>
+                                            <button class="text-green-600 hover:text-green-800">奖励</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- 积分操作栏 -->
+                    <div class="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center justify-between">
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn-primary inline-flex items-center">
+                                <i class="fa fa-plus mr-2"></i>
+                                <span>批量加分</span>
+                            </button>
+                            <button class="btn-outline inline-flex items-center">
+                                <i class="fa fa-minus mr-2"></i>
+                                <span>批量减分</span>
+                            </button>
+                            <button class="btn-outline inline-flex items-center">
+                                <i class="fa fa-file-excel-o mr-2"></i>
+                                <span>导出数据</span>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <input type="text" placeholder="搜索学生..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                            <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- 积分规则卡片 -->
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">积分规则</h3>
+                            <button class="text-primary hover:text-primary-dark text-sm font-medium flex items-center">
+                                <i class="fa fa-pencil mr-1"></i>
+                                <span>编辑规则</span>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 mb-2">加分规则</h4>
+                                <ul class="space-y-2 text-sm text-gray-600">
+                                    <li class="flex justify-between">
+                                        <span>作业优秀</span>
+                                        <span class="font-medium">+5分</span>
+                                    </li>
+                                    <li class="flex justify-between">
+                                        <span>课堂发言</span>
+                                        <span class="font-medium">+2分</span>
+                                    </li>
+                                    <li class="flex justify-between">
+                                        <span>帮助同学</span>
+                                        <span class="font-medium">+3分</span>
+                                    </li>
+                                    <li class="flex justify-between">
+                                        <span>卫生保持</span>
+                                        <span class="font-medium">+2分</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 mb-2">减分规则</h4>
+                                <ul class="space-y-2 text-sm text-gray-600">
+                                    <li class="flex justify-between">
+                                        <span>未完成作业</span>
+                                        <span class="font-medium">-3分</span>
+                                    </li>
+                                    <li class="flex justify-between">
+                                        <span>课堂违纪</span>
+                                        <span class="font-medium">-2分</span>
+                                    </li>
+                                    <li class="flex justify-between">
+                                        <span>迟到</span>
+                                        <span class="font-medium">-1分</span>
+                                    </li>
+                                    <li class="flex justify-between">
+                                        <span>卫生脏乱</span>
+                                        <span class="font-medium">-2分</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 学生积分表格 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            学生
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            积分
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            班币
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            宠物等级
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            最近活动
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            操作
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/men/1.jpg" alt="">
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">
+                                                        李明
+                                                    </div>
+                                                    <div class="text-sm text-gray-500">
+                                                        学号: 20260101
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">95</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">18</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                Lv.3
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            2小时前
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">加分</button>
+                                            <button class="text-danger hover:text-danger-dark mr-3">减分</button>
+                                            <button class="text-gray-600 hover:text-gray-900">详情</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/women/2.jpg" alt="">
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">
+                                                        张晓
+                                                    </div>
+                                                    <div class="text-sm text-gray-500">
+                                                        学号: 20260102
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">90</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">15</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                Lv.2
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            5小时前
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">加分</button>
+                                            <button class="text-danger hover:text-danger-dark mr-3">减分</button>
+                                            <button class="text-gray-600 hover:text-gray-900">详情</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/men/3.jpg" alt="">
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">
+                                                        王浩
+                                                    </div>
+                                                    <div class="text-sm text-gray-500">
+                                                        学号: 20260103
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">82</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">12</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                Lv.4
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            昨天
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">加分</button>
+                                            <button class="text-danger hover:text-danger-dark mr-3">减分</button>
+                                            <button class="text-gray-600 hover:text-gray-900">详情</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/women/4.jpg" alt="">
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">
+                                                        刘佳
+                                                    </div>
+                                                    <div class="text-sm text-gray-500">
+                                                        学号: 20260104
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">78</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">10</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                Lv.1
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            2天前
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">加分</button>
+                                            <button class="text-danger hover:text-danger-dark mr-3">减分</button>
+                                            <button class="text-gray-600 hover:text-gray-900">详情</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1 flex justify-between sm:hidden">
+                                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        上一页
+                                    </a>
+                                    <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        下一页
+                                    </a>
+                                </div>
+                                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-700">
+                                            显示 <span class="font-medium">1</span> 到 <span class="font-medium">4</span> 共 <span class="font-medium">42</span> 条结果
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                                <span class="sr-only">上一页</span>
+                                                <i class="fa fa-chevron-left"></i>
+                                            </a>
+                                            <a href="#" aria-current="page" class="z-10 bg-primary border-primary text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                                1
+                                            </a>
+                                            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                                2
+                                            </a>
+                                            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                                3
+                                            </a>
+                                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                                ...
+                                            </span>
+                                            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                                11
+                                            </a>
+                                            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                                <span class="sr-only">下一页</span>
+                                                <i class="fa fa-chevron-right"></i>
+                                            </a>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 班级商城 -->
+                <div id="shop" class="content-section hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">班级商城</h2>
+                        <p class="text-gray-600">管理班级小卖部和虚拟徽章。</p>
+                    </div>
+                    
+                    <!-- 成就徽章 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">成就徽章</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-star text-yellow-500 text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">积分达人</span>
+                                <span class="text-xs text-gray-500">已获得</span>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-book text-blue-500 text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">学习标兵</span>
+                                <span class="text-xs text-gray-500">已获得</span>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover">
+                                <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-paw text-green-500 text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">宠物大师</span>
+                                <span class="text-xs text-gray-500">已获得</span>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover opacity-50">
+                                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-trophy text-gray-400 text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-500">全能冠军</span>
+                                <span class="text-xs text-gray-500">未获得</span>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover opacity-50">
+                                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-users text-gray-400 text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-500">团队之星</span>
+                                <span class="text-xs text-gray-500">未获得</span>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center card-hover opacity-50">
+                                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-magic text-gray-400 text-2xl"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-500">创意天才</span>
+                                <span class="text-xs text-gray-500">未获得</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 商城分类标签 -->
+                    <div class="mb-6 flex flex-wrap gap-2">
+                        <button class="px-4 py-2 bg-primary text-white rounded-full text-sm font-medium">全部商品</button>
+                        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100">虚拟特权</button>
+                        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100">虚拟徽章</button>
+                        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100">实物礼物</button>
+                        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100">我的兑换</button>
+                    </div>
+                    
+                    <!-- 商品列表 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <!-- 商品卡片 1 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="relative">
+                                <div class="h-40 bg-yellow-50 flex items-center justify-center p-4">
+                                    <i class="fa fa-star text-yellow-500 text-5xl"></i>
+                                </div>
+                                <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                                    <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">10币</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-1">免作业券</h3>
+                                <p class="text-sm text-gray-500 mb-3">可以免做一次家庭作业</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500">库存: 10</span>
+                                    <button class="btn-primary text-sm py-1 px-3">兑换</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 商品卡片 2 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="relative">
+                                <div class="h-40 bg-purple-50 flex items-center justify-center p-4">
+                                    <i class="fa fa-paint-brush text-purple-500 text-5xl"></i>
+                                </div>
+                                <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                                    <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">15币</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-1">宠物命名权</h3>
+                                <p class="text-sm text-gray-500 mb-3">可以给自己的宠物起名字</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500">库存: 无限</span>
+                                    <button class="btn-primary text-sm py-1 px-3">兑换</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 商品卡片 3 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="relative">
+                                <div class="h-40 bg-blue-50 flex items-center justify-center p-4">
+                                    <i class="fa fa-medal text-blue-500 text-5xl"></i>
+                                </div>
+                                <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                                    <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">8币</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-1">进步之星徽章</h3>
+                                <p class="text-sm text-gray-500 mb-3">虚拟徽章，展示在个人资料中</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500">库存: 20</span>
+                                    <button class="btn-primary text-sm py-1 px-3">兑换</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 商品卡片 4 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="relative">
+                                <div class="h-40 bg-green-50 flex items-center justify-center p-4">
+                                    <i class="fa fa-gift text-green-500 text-5xl"></i>
+                                </div>
+                                <div class="absolute top-2 right-2 bg-white rounded-full p-1 shadow">
+                                    <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">20币</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-1">小礼品一份</h3>
+                                <p class="text-sm text-gray-500 mb-3">实物小礼品，由老师提供</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500">库存: 5</span>
+                                    <button class="btn-primary text-sm py-1 px-3">兑换</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 添加商品卡片 -->
+                        <div class="bg-white rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center p-6 h-full min-h-[280px] cursor-pointer hover:border-primary transition-colors duration-300">
+                            <div class="h-16 w-16 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mb-4">
+                                <i class="fa fa-plus text-primary text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-1">添加新商品</h3>
+                            <p class="text-sm text-gray-500 text-center">上架新的虚拟或实物商品</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 徽章墙 -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">徽章墙</h3>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/6e5fd0d0d2c14087bab22b5124867423~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607179&x-signature=dp8dBzA6oHEcFJd8jXDu31MQTio%3D" alt="徽章墙" class="w-full rounded-lg">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 家长联动 -->
+                <div id="parents" class="content-section hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">家长联动</h2>
+                        <p class="text-gray-600">与家长保持联系，分享学生进步。</p>
+                    </div>
+                    
+                    <!-- 家长绑定二维码 -->
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <div class="flex flex-col md:flex-row items-center justify-center">
+                            <div class="mb-6 md:mb-0 md:mr-8">
+                                <div class="bg-gray-100 p-4 rounded-lg inline-block">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://classpet.example.com/parent/join/6B7D8E9F" alt="家长绑定二维码" class="h-48 w-48">
+                                </div>
+                            </div>
+                            <div class="text-center md:text-left">
+                                <h3 class="text-xl font-medium text-gray-900 mb-2">家长绑定</h3>
+                                <p class="text-gray-600 mb-4">请将此二维码分享给家长，家长扫码后可查看孩子的学习情况和宠物成长。</p>
+                                <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+                                    <button class="btn-primary inline-flex items-center">
+                                        <i class="fa fa-download mr-2"></i>
+                                        <span>下载二维码</span>
+                                    </button>
+                                    <button class="btn-outline inline-flex items-center">
+                                        <i class="fa fa-share-alt mr-2"></i>
+                                        <span>分享给家长</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 家长列表 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">已绑定家长</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            家长信息
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            学生
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            绑定时间
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            最近访问
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            操作
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/women/31.jpg" alt="">
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">
+                                                        李妈妈
+                                                    </div>
+                                                    <div class="text-sm text-gray-500">
+                                                        138****1234
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">李明</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">2026-05-01</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">今天</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">发送消息</button>
+                                            <button class="text-gray-600 hover:text-gray-900">查看记录</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/men/42.jpg" alt="">
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">
+                                                        张爸爸
+                                                    </div>
+                                                    <div class="text-sm text-gray-500">
+                                                        139****5678
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">张晓</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">2026-05-03</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">昨天</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">发送消息</button>
+                                            <button class="text-gray-600 hover:text-gray-900">查看记录</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/women/53.jpg" alt="">
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">
+                                                        王妈妈
+                                                    </div>
+                                                    <div class="text-sm text-gray-500">
+                                                        135****9012
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">王浩</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">2026-05-05</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">3天前</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button class="text-primary hover:text-primary-dark mr-3">发送消息</button>
+                                            <button class="text-gray-600 hover:text-gray-900">查看记录</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- 家长通知 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="text-lg font-medium text-gray-900">发送通知</h3>
+                            <button class="text-primary hover:text-primary-dark text-sm font-medium flex items-center">
+                                <i class="fa fa-history mr-1"></i>
+                                <span>历史记录</span>
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="notificationTitle">
+                                    通知标题
+                                </label>
+                                <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="notificationTitle" type="text" placeholder="请输入通知标题">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="notificationContent">
+                                    通知内容
+                                </label>
+                                <textarea class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="notificationContent" rows="4" placeholder="请输入通知内容"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-medium mb-2">
+                                    发送对象
+                                </label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="inline-flex items-center">
+                                        <input type="checkbox" class="form-checkbox h-5 w-5 text-primary" checked>
+                                        <span class="ml-2 text-gray-700">全部家长</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="checkbox" class="form-checkbox h-5 w-5 text-primary">
+                                        <span class="ml-2 text-gray-700">积分靠前</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="checkbox" class="form-checkbox h-5 w-5 text-primary">
+                                        <span class="ml-2 text-gray-700">积分靠后</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="checkbox" class="form-checkbox h-5 w-5 text-primary">
+                                        <span class="ml-2 text-gray-700">自定义</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button class="btn-outline mr-3">预览</button>
+                                <button class="btn-primary">发送通知</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 互动工具 -->
+                <div id="tools" class="content-section hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">互动工具</h2>
+                        <p class="text-gray-600">课堂互动和班级管理工具。</p>
+                    </div>
+                    
+                    <!-- 工具卡片 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- 随机点名 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="h-40 bg-blue-50 flex items-center justify-center p-4">
+                                <i class="fa fa-random text-blue-500 text-5xl"></i>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">随机点名</h3>
+                                <p class="text-sm text-gray-500 mb-4">随机选择学生回答问题或参与活动</p>
+                                <button class="btn-primary w-full">开始点名</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 朗读挑战 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="h-40 bg-green-50 flex items-center justify-center p-4">
+                                <i class="fa fa-microphone text-green-500 text-5xl"></i>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">朗读挑战</h3>
+                                <p class="text-sm text-gray-500 mb-4">检测学生朗读音量，激发参与热情</p>
+                                <button class="btn-primary w-full">开始挑战</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 静音挑战 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="h-40 bg-purple-50 flex items-center justify-center p-4">
+                                <i class="fa fa-volume-off text-purple-500 text-5xl"></i>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">静音挑战</h3>
+                                <p class="text-sm text-gray-500 mb-4">监测自习课纪律，保持安静环境</p>
+                                <button class="btn-primary w-full">开始监测</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 作业消消乐 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="h-40 bg-yellow-50 flex items-center justify-center p-4">
+                                <i class="fa fa-tasks text-yellow-500 text-5xl"></i>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">作业消消乐</h3>
+                                <p class="text-sm text-gray-500 mb-4">完成作业获得消除机会，趣味化作业检查</p>
+                                <button class="btn-primary w-full">开始游戏</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 全屏计时器 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="h-40 bg-red-50 flex items-center justify-center p-4">
+                                <i class="fa fa-clock-o text-red-500 text-5xl"></i>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">全屏计时器</h3>
+                                <p class="text-sm text-gray-500 mb-4">课堂计时工具，多种模式可选</p>
+                                <button class="btn-primary w-full">打开计时器</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 大屏控制 -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden card-hover">
+                            <div class="h-40 bg-gray-50 flex items-center justify-center p-4">
+                                <i class="fa fa-desktop text-gray-500 text-5xl"></i>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">大屏控制</h3>
+                                <p class="text-sm text-gray-500 mb-4">手机遥控大屏，远程发送消息和锁屏</p>
+                                <button class="btn-primary w-full">连接大屏</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 大屏互动说明 -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">大屏互动说明</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-2">如何使用手机控制大屏</h4>
+                                <ol class="list-decimal list-inside space-y-2 text-sm text-gray-600">
+                                    <li>确保手机和电脑在同一网络下</li>
+                                    <li>点击"连接大屏"按钮</li>
+                                    <li>扫描弹出的二维码</li>
+                                    <li>连接成功后即可远程控制</li>
+                                </ol>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-2">功能介绍</h4>
+                                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600">
+                                    <li>远程加减分：手机端操作，大屏实时显示</li>
+                                    <li>远程喊话：发送文字或语音到大屏</li>
+                                    <li>远程锁屏：防止学生误操作</li>
+                                    <li>实时数据：查看班级实时数据</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 班级设置 -->
+                <div id="settings" class="content-section hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">班级设置</h2>
+                        <p class="text-gray-600">管理班级信息和系统设置。</p>
+                    </div>
+                    
+                    <!-- 设置选项卡 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="border-b border-gray-200">
+                            <nav class="flex -mb-px">
+                                <button class="settings-tab text-primary border-primary px-6 py-4 border-b-2 font-medium text-sm" data-target="basicSettings">
+                                    基本信息
+                                </button>
+                                <button class="settings-tab text-gray-500 hover:text-gray-700 hover:border-gray-300 px-6 py-4 border-b-2 border-transparent font-medium text-sm" data-target="studentSettings">
+                                    学生管理
+                                </button>
+                                <button class="settings-tab text-gray-500 hover:text-gray-700 hover:border-gray-300 px-6 py-4 border-b-2 border-transparent font-medium text-sm" data-target="petSettings">
+                                    宠物设置
+                                </button>
+                                <button class="settings-tab text-gray-500 hover:text-gray-700 hover:border-gray-300 px-6 py-4 border-b-2 border-transparent font-medium text-sm" data-target="notificationSettings">
+                                    通知设置
+                                </button>
+                                <button class="settings-tab text-gray-500 hover:text-gray-700 hover:border-gray-300 px-6 py-4 border-b-2 border-transparent font-medium text-sm" data-target="accountSettings">
+                                    账号设置
+                                </button>
+                            </nav>
+                        </div>
+                        
+                        <!-- 基本信息设置 -->
+                        <div id="basicSettings" class="settings-content p-6">
+                            <div class="max-w-3xl">
+                                <div class="mb-6">
+                                    <label class="block text-gray-700 text-sm font-medium mb-2" for="className">
+                                        班级名称
+                                    </label>
+                                    <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="className" type="text" value="六年级1班">
+                                </div>
+                                <div class="mb-6">
+                                    <label class="block text-gray-700 text-sm font-medium mb-2" for="classCode">
+                                        班级码
+                                    </label>
+                                    <div class="flex">
+                                        <input class="shadow appearance-none border rounded-l-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="classCode" type="text" value="6B7D8E9F" readonly>
+                                        <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-r-lg hover:bg-gray-300 transition-colors duration-300">
+                                            <i class="fa fa-refresh"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-6">
+                                    <label class="block text-gray-700 text-sm font-medium mb-2" for="classDescription">
+                                        班级描述
+                                    </label>
+                                    <textarea class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="classDescription" rows="3">这是一个充满活力和创造力的班级，我们共同努力，一起成长！</textarea>
+                                </div>
+                                <div class="mb-6">
+                                    <label class="block text-gray-700 text-sm font-medium mb-2" for="classAvatar">
+                                        班级头像
+                                    </label>
+                                    <div class="flex items-center">
+                                        <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold mr-4">
+                                            六1
+                                        </div>
+                                        <button class="btn-outline">更换头像</button>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button class="btn-primary">保存设置</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 学生管理设置 -->
+                        <div id="studentSettings" class="settings-content hidden p-6">
+                            <div class="mb-6 flex justify-between items-center">
+                                <h3 class="text-lg font-medium text-gray-900">学生列表</h3>
+                                <div class="flex gap-2">
+                                    <button class="btn-outline inline-flex items-center">
+                                        <i class="fa fa-upload mr-2"></i>
+                                        <span>批量导入</span>
+                                    </button>
+                                    <button class="btn-primary inline-flex items-center">
+                                        <i class="fa fa-plus mr-2"></i>
+                                        <span>添加学生</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                学生
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                学号
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                分组
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                宠物
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                操作
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10">
+                                                        <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/men/1.jpg" alt="">
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            李明
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">20260101</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    第一组
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/6dae7c6f7e6346cd999f9d0641b2d2ee~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607134&x-signature=kivTuG1LQk3OnCXdt8VxBbFrtZ0%3D" alt="宠物" class="h-6 w-6 mr-2">
+                                                    <span class="text-sm text-gray-900">小汪</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button class="text-primary hover:text-primary-dark mr-3">编辑</button>
+                                                <button class="text-danger hover:text-danger-dark">删除</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10">
+                                                        <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/women/2.jpg" alt="">
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            张晓
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">20260102</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    第一组
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/f13b059ddf044eba90861e2243a5ed83~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607137&x-signature=989itCUbVLpDqH42ZdZPp64%2BeGGav4%3D" alt="宠物" class="h-6 w-6 mr-2">
+                                                    <span class="text-sm text-gray-900">咪咪</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button class="text-primary hover:text-primary-dark mr-3">编辑</button>
+                                                <button class="text-danger hover:text-danger-dark">删除</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">分组管理</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="font-medium text-gray-900">第一组</h4>
+                                            <div class="flex">
+                                                <button class="text-primary hover:text-primary-dark mr-3">
+                                                    <i class="fa fa-pencil"></i>
+                                                </button>
+                                                <button class="text-danger hover:text-danger-dark">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-gray-500 mb-2">成员: 李明, 张晓, 王浩, 刘佳</p>
+                                        <div class="flex items-center">
+                                            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/5375f2f3a4f94f9face0415ac3223224~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607140&x-signature=MTs5dM5QOMuuARNj1CRKXs8aVZQ%3D" alt="小组宠物" class="h-8 w-8 mr-2">
+                                            <span class="text-sm font-medium text-gray-900">跳跳兔</span>
+                                            <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full">Lv.2</span>
+                                        </div>
+                                    </div>
+                                    <div class="border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer hover:border-primary transition-colors duration-300">
+                                        <div class="h-10 w-10 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mb-2">
+                                            <i class="fa fa-plus text-primary"></i>
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-900">添加新分组</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 宠物设置 -->
+                        <div id="petSettings" class="settings-content hidden p-6">
+                            <div class="max-w-3xl">
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">宠物系统设置</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">宠物饥饿模式</h4>
+                                                <p class="text-sm text-gray-500">开启后，宠物多天未加能量会饿晕</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">宠物音效提醒</h4>
+                                                <p class="text-sm text-gray-500">宠物状态变化时播放音效</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">宠物自动分配</h4>
+                                                <p class="text-sm text-gray-500">新学生加入时自动分配宠物</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer">
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">宠物蛋设置</h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                        <div class="border border-gray-200 rounded-lg p-4 flex flex-col items-center">
+                                            <img src="https://p6-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/3beed33dca494b9092a2b5bf31250fdf~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607179&x-signature=ZaMh3UF81mpTmciTZp64%2BeGGav4%3D" alt="宠物蛋" class="h-24 w-24 object-contain mb-2">
+                                            <h4 class="font-medium text-gray-900">爱心蛋</h4>
+                                            <div class="mt-2">
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" class="sr-only peer" checked>
+                                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="border border-gray-200 rounded-lg p-4 flex flex-col items-center">
+                                            <img src="https://p6-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/3beed33dca494b9092a2b5bf31250fdf~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607179&x-signature=ZaMh3UF81mpTmciTZp64%2BeGGav4%3D" alt="宠物蛋" class="h-24 w-24 object-contain mb-2">
+                                            <h4 class="font-medium text-gray-900">守纪蛋</h4>
+                                            <div class="mt-2">
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" class="sr-only peer" checked>
+                                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="border border-gray-200 rounded-lg p-4 flex flex-col items-center">
+                                            <img src="https://p6-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/3beed33dca494b9092a2b5bf31250fdf~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260517185121C2755EDEAE3EDAD7D8B6&rrcfp=f06b921b&x-expires=1781607179&x-signature=ZaMh3UF81mpTmciTZp64%2BeGGav4%3D" alt="宠物蛋" class="h-24 w-24 object-contain mb-2">
+                                            <h4 class="font-medium text-gray-900">进步蛋</h4>
+                                            <div class="mt-2">
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" class="sr-only peer" checked>
+                                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end">
+                                    <button class="btn-primary">保存设置</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 通知设置 -->
+                        <div id="notificationSettings" class="settings-content hidden p-6">
+                            <!-- 通知设置内容 -->
+                            <div class="max-w-3xl">
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">通知设置</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">积分变动通知</h4>
+                                                <p class="text-sm text-gray-500">学生积分发生变化时通知家长</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">宠物状态通知</h4>
+                                                <p class="text-sm text-gray-500">宠物需要喂食或升级时通知家长</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">班级通知</h4>
+                                                <p class="text-sm text-gray-500">发送班级通知时通知家长</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer" checked>
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">通知模板</h3>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-2" for="pointsChangeTemplate">
+                                                积分变动通知模板
+                                            </label>
+                                            <textarea class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="pointsChangeTemplate" rows="3">尊敬的家长，您的孩子{{学生姓名}}的积分发生了变化，当前积分为{{当前积分}}，变动了{{变动积分}}分。</textarea>
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-2" for="petStatusTemplate">
+                                                宠物状态通知模板
+                                            </label>
+                                            <textarea class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="petStatusTemplate" rows="3">尊敬的家长，您的孩子{{学生姓名}}的宠物{{宠物名称}}需要您的关注，当前状态：{{宠物状态}}。</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end">
+                                    <button class="btn-primary">保存设置</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 账号设置 -->
+                        <div id="accountSettings" class="settings-content hidden p-6">
+                            <!-- 账号设置内容 -->
+                            <div class="max-w-3xl">
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">个人信息</h3>
+                                    <div class="flex items-center mb-6">
+                                        <div class="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold mr-6">
+                                            张
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl font-medium text-gray-900 mb-1">张老师</h4>
+                                            <p class="text-gray-500">六年级1班班主任</p>
+                                            <button class="mt-2 text-primary hover:text-primary-dark text-sm font-medium flex items-center">
+                                                <i class="fa fa-pencil mr-1"></i>
+                                                <span>更换头像</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-2" for="teacherName">
+                                                姓名
+                                            </label>
+                                            <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="teacherName" type="text" value="张老师">
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-2" for="teacherEmail">
+                                                邮箱
+                                            </label>
+                                            <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="teacherEmail" type="email" value="teacher@example.com">
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-2" for="teacherPhone">
+                                                手机号
+                                            </label>
+                                            <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="teacherPhone" type="text" value="138****1234">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">账号安全</h3>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-2" for="currentPassword">
+                                                当前密码
+                                            </label>
+                                            <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="currentPassword" type="password" placeholder="请输入当前密码">
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-2" for="newPassword">
+                                                新密码
+                                            </label>
+                                            <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="newPassword" type="password" placeholder="请输入新密码">
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-2" for="confirmPassword">
+                                                确认新密码
+                                            </label>
+                                            <input class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" id="confirmPassword" type="password" placeholder="请再次输入新密码">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end">
+                                    <button class="btn-primary">保存设置</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 移动端底部导航 -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
+        <div class="flex justify-around">
+            <button class="mobile-nav-item flex flex-col items-center py-2 px-3 text-primary" data-target="dashboard">
+                <i class="fa fa-dashboard text-lg"></i>
+                <span class="text-xs mt-1">概览</span>
+            </button>
+            <button class="mobile-nav-item flex flex-col items-center py-2 px-3 text-gray-500" data-target="pets">
+                <i class="fa fa-paw text-lg"></i>
+                <span class="text-xs mt-1">宠物</span>
+            </button>
+            <button class="mobile-nav-item flex flex-col items-center py-2 px-3 text-gray-500" data-target="points">
+                <i class="fa fa-star text-lg"></i>
+                <span class="text-xs mt-1">积分</span>
+            </button>
+            <button class="mobile-nav-item flex flex-col items-center py-2 px-3 text-gray-500" data-target="tools">
+                <i class="fa fa-wrench text-lg"></i>
+                <span class="text-xs mt-1">工具</span>
+            </button>
+            <button class="mobile-nav-item flex flex-col items-center py-2 px-3 text-gray-500" data-target="settings">
+                <i class="fa fa-cog text-lg"></i>
+                <span class="text-xs mt-1">设置</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模拟登录，隐藏登录模态框
+            setTimeout(function() {
+                document.getElementById('authModal').classList.add('hidden');
+            }, 1000);
+            
+            // 登录/注册标签切换
+            document.getElementById('loginTab').addEventListener('click', function() {
+                document.getElementById('loginTab').classList.add('border-primary', 'text-primary');
+                document.getElementById('loginTab').classList.remove('border-gray-200', 'text-gray-500');
+                document.getElementById('registerTab').classList.add('border-gray-200', 'text-gray-500');
+                document.getElementById('registerTab').classList.remove('border-primary', 'text-primary');
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+            });
+            
+            document.getElementById('registerTab').addEventListener('click', function() {
+                document.getElementById('registerTab').classList.add('border-primary', 'text-primary');
+                document.getElementById('registerTab').classList.remove('border-gray-200', 'text-gray-500');
+                document.getElementById('loginTab').classList.add('border-gray-200', 'text-gray-500');
+                document.getElementById('loginTab').classList.remove('border-primary', 'text-primary');
+                document.getElementById('registerForm').classList.remove('hidden');
+                document.getElementById('loginForm').classList.add('hidden');
+            });
+            
+            // 导航菜单切换
+            const navItems = document.querySelectorAll('.nav-item, .mobile-nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const target = this.getAttribute('data-target');
+                    
+                    // 更新导航项样式
+                    navItems.forEach(navItem => {
+                        if (navItem.getAttribute('data-target') === target) {
+                            navItem.classList.add('active', 'text-primary', 'bg-gray-100');
+                            if (navItem.classList.contains('mobile-nav-item')) {
+                                navItem.classList.remove('text-gray-500');
+                            }
+                        } else {
+                            navItem.classList.remove('active', 'text-primary', 'bg-gray-100');
+                            if (navItem.classList.contains('mobile-nav-item')) {
+                                navItem.classList.add('text-gray-500');
+                            }
+                        }
+                    });
+                    
+                    // 显示对应内容
+                    const contentSections = document.querySelectorAll('.content-section');
+                    contentSections.forEach(section => {
+                        if (section.id === target) {
+                            section.classList.remove('hidden');
+                        } else {
+                            section.classList.add('hidden');
+                        }
+                    });
+                    
+                    // 移动端菜单点击后关闭
+                    document.getElementById('sidebar').classList.add('hidden');
+                });
+            });
+            
+            // 移动端菜单按钮
+            document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('fixed');
+                sidebar.classList.toggle('inset-0');
+                sidebar.classList.toggle('z-20');
+                sidebar.classList.toggle('flex');
+            });
+            
+            // 设置选项卡切换
+            const settingsTabs = document.querySelectorAll('.settings-tab');
+            settingsTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const target = this.getAttribute('data-target');
+                    
+                    // 更新选项卡样式
+                    settingsTabs.forEach(settingsTab => {
+                        if (settingsTab.getAttribute('data-target') === target) {
+                            settingsTab.classList.add('text-primary', 'border-primary');
+                            settingsTab.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+                        } else {
+                            settingsTab.classList.remove('text-primary', 'border-primary');
+                            settingsTab.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+                        }
+                    });
+                    
+                    // 显示对应内容
+                    const settingsContents = document.querySelectorAll('.settings-content');
+                    settingsContents.forEach(content => {
+                        if (content.id === target) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+            
+            // 积分趋势图表
+            const ctx = document.getElementById('pointsChart').getContext('2d');
+            const pointsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                    datasets: [
+                        {
+                            label: '李明',
+                            data: [30, 45, 40, 60, 80, 75, 95],
+                            borderColor: '#4F46E5',
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '张晓',
+                            data: [25, 35, 50, 55, 70, 65, 90],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '王浩',
+                            data: [20, 30, 35, 45, 55, 70, 82],
+                            borderColor: '#F59E0B',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // 模拟宠物喂食功能
+            const feedButtons = document.querySelectorAll('.btn-primary');
+            feedButtons.forEach(button => {
+                if (button.textContent.trim() === '喂食') {
+                    button.addEventListener('click', function() {
+                        // 显示喂食成功提示
+                        const petCard = this.closest('.bg-white');
+                        const petName = petCard.querySelector('h3').textContent;
+                        
+                        // 创建提示元素
+                        const toast = document.createElement('div');
+                        toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                        toast.textContent = `成功喂食${petName}！`;
+                        document.body.appendChild(toast);
+                        
+                        // 2秒后移除提示
+                        setTimeout(() => {
+                            toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                            setTimeout(() => {
+                                document.body.removeChild(toast);
+                            }, 500);
+                        }, 2000);
+                        
+                        // 更新能量条
+                        const energyBar = petCard.querySelector('.bg-green-500, .bg-yellow-500, .bg-red-500');
+                        if (energyBar) {
+                            const currentWidth = parseInt(energyBar.style.width) || 0;
+                            const newWidth = Math.min(currentWidth + 20, 100);
+                            energyBar.style.width = `${newWidth}%`;
+                            
+                            // 更新能量文本
+                            const energyText = petCard.querySelector('.flex.justify-between.text-xs.text-gray-500.mb-1 span:last-child');
+                            if (energyText) {
+                                energyText.textContent = `${newWidth}/100`;
+                            }
+                            
+                            // 更新能量条颜色
+                            if (newWidth > 60) {
+                                energyBar.className = 'bg-green-500 h-2 rounded-full';
+                            } else if (newWidth > 30) {
+                                energyBar.className = 'bg-yellow-500 h-2 rounded-full';
+                            } else {
+                                energyBar.className = 'bg-red-500 h-2 rounded-full';
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // 模拟积分操作功能
+            const pointButtons = document.querySelectorAll('button.text-primary, button.text-danger');
+            pointButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const action = this.textContent.trim();
+                    const row = this.closest('tr');
+                    const studentName = row.querySelector('.text-sm.font-medium.text-gray-900').textContent;
+                    const pointsCell = row.querySelectorAll('td')[1];
+                    let currentPoints = parseInt(pointsCell.textContent.trim());
+                    
+                    // 更新积分
+                    if (action === '加分') {
+                        currentPoints += 5;
+                        showToast(`已为${studentName}加5分！`);
+                    } else if (action === '减分') {
+                        currentPoints = Math.max(0, currentPoints - 2);
+                        showToast(`已为${studentName}减2分！`);
+                    }
+                    
+                    // 更新显示
+                    pointsCell.textContent = currentPoints;
+                });
+            });
+            
+            // 随机点名功能
+            const randomNameBtn = document.querySelector('button:has(i.fa-random)');
+            if (randomNameBtn) {
+                randomNameBtn.addEventListener('click', function() {
+                    const students = ['李明', '张晓', '王浩', '刘佳', '陈华', '赵强', '孙丽', '周敏'];
+                    const randomStudent = students[Math.floor(Math.random() * students.length)];
+                    
+                    // 创建点名结果弹窗
+                    const modal = document.createElement('div');
+                    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                    modal.innerHTML = `
+                        <div class="bg-white rounded-xl p-8 w-full max-w-md shadow-2xl text-center">
+                            <div class="text-4xl font-bold text-primary mb-4">${randomStudent}</div>
+                            <p class="text-gray-600 mb-6">恭喜被选中！</p>
+                            <button id="closeRandomModal" class="btn-primary">确定</button>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    
+                    // 关闭弹窗
+                    document.getElementById('closeRandomModal').addEventListener('click', function() {
+                        document.body.removeChild(modal);
+                    });
+                });
+            }
+            
+            // 辅助函数：显示提示信息
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 500);
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
